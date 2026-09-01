@@ -9,7 +9,7 @@ const processedVideos = new WeakSet();
  * @param {Object} event - The watch event containing type and time.
  */
 function handleWatchEvent(event) {
-    console.log("FestiveWatch: Watch event", event);
+    console.log("Symbiance: Watch event", event);
 }
 
 /**
@@ -24,11 +24,11 @@ function attachVideoListeners(video) {
 
     // Mark the video as processed
     processedVideos.add(video);
-    console.log("FestiveWatch: Found a video element.", video);
+    console.log("Symbiance: Found a video element.", video);
 
     // Monitor when the video starts playing
     video.addEventListener('play', () => {
-        console.log(`FestiveWatch: Video started playing at ${video.currentTime}`);
+        console.log(`Symbiance: Video started playing at ${video.currentTime}`);
         handleWatchEvent({
             type: "play",
             time: video.currentTime
@@ -37,7 +37,7 @@ function attachVideoListeners(video) {
 
     // Monitor when the video pauses
     video.addEventListener('pause', () => {
-        console.log(`FestiveWatch: Video was paused at ${video.currentTime}`);
+        console.log(`Symbiance: Video was paused at ${video.currentTime}`);
         handleWatchEvent({
             type: "pause",
             time: video.currentTime
@@ -46,7 +46,7 @@ function attachVideoListeners(video) {
 
     // Monitor when the user seeks through the video
     video.addEventListener('seeking', () => {
-        console.log(`FestiveWatch: User is seeking. Current time: ${video.currentTime}`);
+        console.log(`Symbiance: User is seeking. Current time: ${video.currentTime}`);
         handleWatchEvent({
             type: "seek",
             time: video.currentTime
