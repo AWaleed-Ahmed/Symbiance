@@ -1,19 +1,21 @@
 {
-  "manifest_version": 3,
-  "name": "Symbiance",
-  "version": "0.1.0",
-  "description": "Synchronize video playback between friends.",
-  "content_scripts": [
-    {
-      "matches": [
-        "http://*/*",
-        "https://*/*"
-      ],
-      "js": [
-        "content.js"
-      ],
-      "run_at": "document_idle",
-      "all_frames": true
-    }
-  ]
+    "manifest_version": 3,
+    "name": "Symbiance",
+    "version": "0.1.0",
+    "description": "Synchronize video playback between friends.",
+    "content_scripts": [
+        {
+            "matches": [
+                "http://*/*",
+                "https://*/*"
+            ],
+            "js": [
+                "extension/websocket.js",
+                "extension/contentMatcher.js",
+                "content.js"
+            ],
+            "run_at": "document_idle",
+            "all_frames": false
+        }
+    ]
 }
