@@ -10,9 +10,9 @@
                 "https://*/*"
             ],
             "js": [
-                "extension/websocket.js",
                 "extension/contentMatcher.js",
-                "content.js"
+                "content.js",
+                "extension/websocket.js"
             ],
             "run_at": "document_idle",
             "all_frames": false
