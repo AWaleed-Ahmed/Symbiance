@@ -67,6 +67,37 @@ function sendContentIdentity() {
 
 
 /**
+ * Sends a playback synchronization message to the room.
+ *
+ * @param {string} action - "play", "pause", or "seek"
+ * @param {number} currentTime - The current playback time of the video
+ */
+function sendPlaybackMessage(action, currentTime) {
+    
+    console.log("Symbiance (Diagnostics): sendPlaybackMessage called. socket exists:", !!socket, "readyState:", socket ? socket.readyState : "N/A");
+
+    // Verify the WebSocket exists and is open
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+        console.warn("Symbiance (Diagnostics): sendPlaybackMessage aborted because WebSocket is not open.");
+        return;
+    }
+
+    const message = {
+        type: "playback",
+        action: action,
+        currentTime: currentTime
+    };
+
+    console.log(
+        "Symbiance: Sending playback message:", 
+        message
+    );
+
+    sendWebSocketMessage(message);
+}
+
+
+/**
  * Handles an identity received from another client.
  *
  * @param {Object} remoteIdentity
@@ -275,12 +306,41 @@ function connectWebSocket() {
 
 
         // ==================================================
-        // FUTURE MESSAGES
-        //
-        // play
-        // pause
-        // seek
-        // chat
+        // PLAYBACK SYNCHRONIZATION
+        // 
+        // Message Format:
+        // {
+        //     type: "playback",
+        //     action: "play" | "pause" | "seek",
+        //     currentTime: <number>
+        // }
+        // ==================================================
+
+        if (message.type === "playback") {
+            console.log(
+                "Symbiance: Received remote playback action:", 
+                message
+            );
+            
+            // Forward the remote command down to child iframes
+            const payload = {
+                source: "symbiance",
+                type: "playback",
+                action: message.action,
+                currentTime: message.currentTime
+            };
+
+            for (let i = 0; i < window.frames.length; i++) {
+                window.frames[i].postMessage(payload, "*");
+            }
+
+            // Note: Remote playback behavior is intentionally NOT implemented yet.
+            // Future step: handleRemotePlayback(message.action, message.currentTime);
+            return;
+        }
+
+        // ==================================================
+        // OTHER UNHANDLED MESSAGES (e.g. chat)
         // ==================================================
 
         console.log(
@@ -341,4 +401,47 @@ function isTopWindow() {
 if (isTopWindow()) {
 
     connectWebSocket();
+
+    // Listen for postMessage events from the child video iframes
+    window.addEventListener("message", (event) => {
+
+        // SECURITY: Verify the message came from a child frame of this window.
+        // We do not accept messages from unrelated windows or from ourselves.
+        try {
+            if (!event.source || event.source === window || event.source.top !== window) {
+                return;
+            }
+        } catch (e) {
+            // If checking event.source.top throws, it's not our child frame.
+            return;
+        }
+
+        const data = event.data;
+        
+        // Validate payload shape
+        if (!data || typeof data !== "object") {
+            return;
+        }
+
+        if (data.source !== "symbiance" || data.type !== "playback") {
+            return;
+        }
+
+        const action = data.action;
+        const currentTime = data.currentTime;
+
+        // Validate action type and currentTime
+        if (
+            (action === "play" || action === "pause" || action === "seek") &&
+            typeof currentTime === "number"
+        ) {
+            console.log(
+                "Symbiance: Top window received playback event from iframe, forwarding to WebSocket:",
+                data
+            );
+
+            // Forward to the WebSocket server using the existing sender function
+            sendPlaybackMessage(action, currentTime);
+        }
+    });
 }

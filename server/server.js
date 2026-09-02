@@ -91,6 +91,8 @@ function sendExistingIdentities(ws, room) {
 
         if (ws.readyState === WebSocket.OPEN) {
 
+            console.log("Symbiance: Sending existing identity to newly joined client");
+
             ws.send(JSON.stringify({
                 type: "identity",
                 identity
@@ -205,6 +207,8 @@ function broadcastToRoom(sender, message) {
         }
 
         if (client.readyState === WebSocket.OPEN) {
+            
+            console.log("Symbiance: Broadcasting message to another client in room");
 
             client.send(
                 JSON.stringify(message)
