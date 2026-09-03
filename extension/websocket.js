@@ -318,9 +318,9 @@ socket = new WebSocket(
         // ==================================================
 
         if (message.type === "playback") {
-            const receivedAt = Date.now();
             if (message.sentAt) {
-                console.log(`Symbiance (Diagnostics): Tab B top window received remote playback action from WebSocket. Latency from Tab A: ${receivedAt - message.sentAt}ms`);
+                const endToEndLatency = Date.now() - message.sentAt;
+                console.log(`Symbiance (Diagnostics): End-to-end playback latency: ${endToEndLatency}ms`);
             } else {
                 console.log(
                     "Symbiance: Received remote playback action:", 
