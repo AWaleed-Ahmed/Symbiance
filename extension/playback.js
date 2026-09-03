@@ -65,7 +65,8 @@ function initializePlaybackListeners() {
                 source: "symbiance",
                 type: "playback",
                 action: "play",
-                currentTime: video.currentTime
+                currentTime: video.currentTime,
+                sentAt: Date.now()
             }, "*");
         }
     });
@@ -77,7 +78,8 @@ function initializePlaybackListeners() {
                 source: "symbiance",
                 type: "playback",
                 action: "pause",
-                currentTime: video.currentTime
+                currentTime: video.currentTime,
+                sentAt: Date.now()
             }, "*");
         }
     });
@@ -89,7 +91,8 @@ function initializePlaybackListeners() {
                 source: "symbiance",
                 type: "playback",
                 action: "seek",
-                currentTime: video.currentTime
+                currentTime: video.currentTime,
+                sentAt: Date.now()
             }, "*");
         }
     });
@@ -146,13 +149,18 @@ window.addEventListener("message", (event) => {
 
     const action = data.action;
     const currentTime = data.currentTime;
+    const sentAt = data.sentAt;
 
     // Validate action type and currentTime
     if (
         (action === "play" || action === "pause" || action === "seek") && 
         typeof currentTime === "number"
     ) {
-        console.log("Symbiance: Video iframe received remote playback command:", data);
+        if (sentAt) {
+            console.log(`Symbiance (Diagnostics): Video iframe received remote playback command. Total end-to-end latency: ${Date.now() - sentAt}ms`);
+        } else {
+            console.log("Symbiance: Video iframe received remote playback command:", data);
+        }
         
         const video = getVideoElement();
         

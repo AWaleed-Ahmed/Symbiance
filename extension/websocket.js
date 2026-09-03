@@ -71,8 +71,9 @@ function sendContentIdentity() {
  *
  * @param {string} action - "play", "pause", or "seek"
  * @param {number} currentTime - The current playback time of the video
+ * @param {number} sentAt - The timestamp when the event originated
  */
-function sendPlaybackMessage(action, currentTime) {
+function sendPlaybackMessage(action, currentTime, sentAt) {
     
     console.log("Symbiance (Diagnostics): sendPlaybackMessage called. socket exists:", !!socket, "readyState:", socket ? socket.readyState : "N/A");
 
@@ -85,7 +86,8 @@ function sendPlaybackMessage(action, currentTime) {
     const message = {
         type: "playback",
         action: action,
-        currentTime: currentTime
+        currentTime: currentTime,
+        sentAt: sentAt || Date.now()
     };
 
     console.log(
@@ -316,17 +318,23 @@ socket = new WebSocket(
         // ==================================================
 
         if (message.type === "playback") {
-            console.log(
-                "Symbiance: Received remote playback action:", 
-                message
-            );
+            const receivedAt = Date.now();
+            if (message.sentAt) {
+                console.log(`Symbiance (Diagnostics): Tab B top window received remote playback action from WebSocket. Latency from Tab A: ${receivedAt - message.sentAt}ms`);
+            } else {
+                console.log(
+                    "Symbiance: Received remote playback action:", 
+                    message
+                );
+            }
             
             // Forward the remote command down to child iframes
             const payload = {
                 source: "symbiance",
                 type: "playback",
                 action: message.action,
-                currentTime: message.currentTime
+                currentTime: message.currentTime,
+                sentAt: message.sentAt
             };
 
             for (let i = 0; i < window.frames.length; i++) {
@@ -428,6 +436,7 @@ if (isTopWindow()) {
 
         const action = data.action;
         const currentTime = data.currentTime;
+        const sentAt = data.sentAt;
 
         // Validate action type and currentTime
         if (
@@ -440,7 +449,7 @@ if (isTopWindow()) {
             );
 
             // Forward to the WebSocket server using the existing sender function
-            sendPlaybackMessage(action, currentTime);
+            sendPlaybackMessage(action, currentTime, sentAt);
         }
     });
 }

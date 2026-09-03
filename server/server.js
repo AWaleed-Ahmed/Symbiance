@@ -363,11 +363,21 @@ wss.on("connection", (ws) => {
         // ==================================================
 
         if (ws.roomId) {
+            
+            let serverReceivedAt;
+            if (message.type === "playback" && message.sentAt) {
+                serverReceivedAt = Date.now();
+                console.log(`Symbiance (Diagnostics): Server received playback message. Transport latency from client: ${serverReceivedAt - message.sentAt}ms`);
+            }
 
             broadcastToRoom(
                 ws,
                 message
             );
+            
+            if (message.type === "playback" && message.sentAt) {
+                console.log(`Symbiance (Diagnostics): Server broadcasted playback message. Internal processing time: ${Date.now() - serverReceivedAt}ms`);
+            }
 
         } else {
 
