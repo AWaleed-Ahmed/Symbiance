@@ -187,10 +187,9 @@ function connectWebSocket() {
     );
 
 
-    socket = new WebSocket(
-        "ws://localhost:8080"
-    );
-
+socket = new WebSocket(
+    "wss://nato-hope-programmes-ones.trycloudflare.com"
+);
 
     /**
      * Fired when the connection to the server is established.

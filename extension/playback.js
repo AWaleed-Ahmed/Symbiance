@@ -11,6 +11,9 @@ let currentVideo = null;
 // Track if we've already attached listeners to the current video
 let listenersAttached = false;
 
+// Guard to prevent echoing remote commands back to the server
+let applyingRemoteCommand = false;
+
 /**
  * 2. Gets the video element from the DOM.
  * Returns the stored video if it's still connected.
@@ -57,32 +60,38 @@ function initializePlaybackListeners() {
     // 4. Attach listeners that log the event and the video's currentTime, and send playback messages.
     video.addEventListener("play", () => {
         console.log("Symbiance: Local play detected at:", video.currentTime);
-        window.parent.postMessage({
-            source: "symbiance",
-            type: "playback",
-            action: "play",
-            currentTime: video.currentTime
-        }, "*");
+        if (!applyingRemoteCommand) {
+            window.parent.postMessage({
+                source: "symbiance",
+                type: "playback",
+                action: "play",
+                currentTime: video.currentTime
+            }, "*");
+        }
     });
 
     video.addEventListener("pause", () => {
         console.log("Symbiance: Local pause detected at:", video.currentTime);
-        window.parent.postMessage({
-            source: "symbiance",
-            type: "playback",
-            action: "pause",
-            currentTime: video.currentTime
-        }, "*");
+        if (!applyingRemoteCommand) {
+            window.parent.postMessage({
+                source: "symbiance",
+                type: "playback",
+                action: "pause",
+                currentTime: video.currentTime
+            }, "*");
+        }
     });
 
     video.addEventListener("seeking", () => {
         console.log("Symbiance: Local seek detected at:", video.currentTime);
-        window.parent.postMessage({
-            source: "symbiance",
-            type: "playback",
-            action: "seek",
-            currentTime: video.currentTime
-        }, "*");
+        if (!applyingRemoteCommand) {
+            window.parent.postMessage({
+                source: "symbiance",
+                type: "playback",
+                action: "seek",
+                currentTime: video.currentTime
+            }, "*");
+        }
     });
 
     listenersAttached = true;
@@ -145,6 +154,31 @@ window.addEventListener("message", (event) => {
     ) {
         console.log("Symbiance: Video iframe received remote playback command:", data);
         
-        // Remote playback execution will be implemented here later
+        const video = getVideoElement();
+        
+        if (!video) {
+            console.warn("Symbiance: Received remote playback command, but no video element is present.");
+            return;
+        }
+
+        applyingRemoteCommand = true;
+
+        if (action === "play") {
+            video.currentTime = currentTime;
+            video.play().catch((e) => {
+                console.warn("Symbiance: Remote play prevented:", e);
+            });
+        } else if (action === "pause") {
+            video.currentTime = currentTime;
+            video.pause();
+        } else if (action === "seek") {
+            video.currentTime = currentTime;
+        }
+
+        // Wait slightly to ensure local DOM events caused by these commands
+        // are caught by the guard before releasing it.
+        setTimeout(() => {
+            applyingRemoteCommand = false;
+        }, 50);
     }
 });
