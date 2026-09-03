@@ -172,7 +172,26 @@ window.addEventListener("message", (event) => {
         applyingRemoteCommand = true;
 
         if (action === "play") {
-            video.currentTime = currentTime;
+            if (typeof sentAt === "number") {
+                const elapsedSeconds = (Date.now() - sentAt) / 1000;
+                let targetTime = currentTime + elapsedSeconds;
+
+                if (targetTime < 0) {
+                    targetTime = 0;
+                }
+
+                console.log(
+                    "Symbiance (Diagnostics): PLAY compensation\n" +
+                    `Original time: ${currentTime.toFixed(3)}\n` +
+                    `Elapsed: ${elapsedSeconds.toFixed(3)}s\n` +
+                    `Target time: ${targetTime.toFixed(3)}`
+                );
+
+                video.currentTime = targetTime;
+            } else {
+                video.currentTime = currentTime;
+            }
+
             video.play().catch((e) => {
                 console.warn("Symbiance: Remote play prevented:", e);
             });
