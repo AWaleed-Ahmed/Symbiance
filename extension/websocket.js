@@ -188,10 +188,12 @@ function connectWebSocket() {
         "Symbiance: Connecting to WebSocket server..."
     );
 
-
-socket = new WebSocket(
-    "wss://nato-hope-programmes-ones.trycloudflare.com"
-);
+    //for person running cloudflare just run
+    //cloudflared tunnel run --url http://localhost:8080
+    //you will see a link just a few lines later and replace it here
+    socket = new WebSocket(
+        "wss://puturlinkhere.com"
+    );
 
     /**
      * Fired when the connection to the server is established.
