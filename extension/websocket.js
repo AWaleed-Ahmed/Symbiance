@@ -251,6 +251,20 @@ socket = new WebSocket(
             message
         );
 
+        if (
+            message &&
+            message.type === "playback" &&
+            typeof message.sentAt === "number"
+        ) {
+            const endToEndLatency = Date.now() - message.sentAt;
+
+            console.log(
+                "Symbiance (Diagnostics): End-to-end playback latency:",
+                endToEndLatency,
+                "ms"
+            );
+        }
+
 
         // ==================================================
         // JOIN CONFIRMATION
@@ -318,12 +332,9 @@ socket = new WebSocket(
         // ==================================================
 
         if (message.type === "playback") {
-            const endToEndLatency = Date.now() - message.sentAt;
-
             console.log(
-                "Symbiance (Diagnostics): End-to-end playback latency:",
-                endToEndLatency,
-                "ms"
+                "Symbiance: Received remote playback action:", 
+                message
             );
             
             // Forward the remote command down to child iframes
