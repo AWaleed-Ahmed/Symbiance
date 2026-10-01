@@ -11,12 +11,27 @@
  */
 
 const { WebSocketServer, WebSocket } = require("ws");
+const https = require("node:https");
+const http = require("node:http");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const PORT = process.env.PORT || 8080;
 
-const wss = new WebSocketServer({
-    port: PORT
-});
+const certificateDir = path.join(__dirname, ".local");
+const useTunnelOrigin = process.env.SYMBIANCE_ORIGIN === "http";
+const handleRequest = (request, response) => {
+    response.writeHead(200, { "content-type": "text/plain; charset=utf-8" });
+    response.end("Symbiance server is ready.\n");
+};
+const server = useTunnelOrigin
+    ? http.createServer(handleRequest)
+    : https.createServer({
+        key: fs.readFileSync(path.join(certificateDir, "key.pem")),
+        cert: fs.readFileSync(path.join(certificateDir, "cert.pem"))
+    }, handleRequest);
+const wss = new WebSocketServer({ server });
+server.listen(PORT, "127.0.0.1");
 
 
 /**
@@ -39,9 +54,8 @@ const wss = new WebSocketServer({
  */
 const rooms = new Map();
 
-console.log(
-    "Symbiance: WebSocket server started on ws://localhost:8080"
-);
+console.log("Symbiance: Server starting on " +
+    (useTunnelOrigin ? "http" : "https") + "://127.0.0.1:" + PORT);
 
 
 /**

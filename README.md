@@ -1,11 +1,8 @@
 # Symbiance
 
-Symbiance is a browser extension and WebSocket server combination designed for perfectly synchronizing video playback across multiple browsers and devices. It allows you to host private watch parties by coordinating standard HTML5 `<video>` events (Play, Pause, Seek) in real-time, completely bypassing CORS restrictions via cross-origin `postMessage` bridges.
+Symbiance is a browser extension and WebSocket server combination for synchronizing HTML5 video playback between tabs.
 
-This project uses a hub-and-spoke architecture: 
-1. The **Top Window** of the webpage communicates securely with child iframes holding the `<video>`.
-2. A single **WebSocket connection** is routed through a secure **Cloudflare Tunnel** to a centralized Node.js server.
-3. The server broadcasts the playback state and utilizes **Timestamp Latency Compensation** to mathematically sync the play times down to the millisecond.
+The extension's background process connects each tab to the local secure WebSocket server. The server relays play, pause, and seek commands to the other tabs in the room.
 
 ---
 
@@ -13,65 +10,45 @@ This project uses a hub-and-spoke architecture:
 
 > **🚨 Non-programmer or never used GitHub? Start here:** Check out our **[Beginner's Guide (for-noobs.md)](for-noobs.md)** for a super simple, step-by-step setup tutorial without the developer jargon!
 
-To host the WebSocket server, you will need **Node.js** and **Cloudflared** (Cloudflare Tunnel).
-
-### Installing Cloudflared
-
-**Windows:**
-Open Command Prompt or PowerShell and run:
-```cmd
-winget install Cloudflare.cloudflared
-```
-
-**Linux (Debian/Ubuntu):**
-Download and install the latest `.deb` package:
-```bash
-curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-sudo dpkg -i cloudflared.deb
-```
-
-**macOS:**
-```bash
-brew install cloudflare/cloudflare/cloudflared
-```
-
----
+You need **Node.js**. Install dependencies with `npm install` in the project root. Direct local connections also need **OpenSSL** to create a certificate. The tunnel option below needs `cloudflared` instead.
 
 ## How to Run the Server
 
-You need two terminal windows to host the server and expose it to the internet securely.
+Generate a local server-only certificate once from the project root. On Windows with Git installed, OpenSSL is usually at `C:\Program Files\Git\usr\bin\openssl.exe`.
 
-### 1. Start the WebSocket Server
-In your first terminal, navigate to the root of the project and start the Node server. By default, it listens on port `8080`.
+```bash
+mkdir -p server/.local
+openssl req -x509 -newkey rsa:2048 -sha256 -nodes -keyout server/.local/key.pem -out server/.local/cert.pem -days 365 -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1" -addext "basicConstraints=critical,CA:FALSE" -addext "keyUsage=critical,digitalSignature,keyEncipherment" -addext "extendedKeyUsage=serverAuth"
+```
+
+The certificate and private key stay in the ignored `server/.local` directory. Start the server:
+
 ```bash
 node server/server.js
 ```
-*(If you haven't installed dependencies yet, run `npm install` inside the `server/` folder to install the `ws` library).*
 
-### 2. Start the Cloudflare Tunnel
-In your second terminal, create a secure tunnel pointing to your local port `8080`:
+In Firefox, visit `https://127.0.0.1:8080`. The certificate is self-signed, so Firefox will ask you to add a certificate exception. Check that the address is exactly `127.0.0.1` before accepting. The page should then say `Symbiance server is ready.` Reload the temporary add-on and refresh the video tabs.
+
+If Firefox stores the local exception in that profile, you do not need to accept it on every server start. A session-only exception, a replaced certificate, or an expired certificate will prompt again.
+
+### No Browser Certificate Exception
+
+For viewers on other machines, use a server address with a publicly trusted certificate. A [Cloudflare Quick Tunnel](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/) works for testing. Install `cloudflared`, then start Symbiance in HTTP origin mode:
+
+```powershell
+$env:SYMBIANCE_ORIGIN = "http"
+node server/server.js
+```
+
+In another terminal:
+
 ```bash
-cloudflared tunnel --url http://localhost:8080
+cloudflared tunnel --url http://127.0.0.1:8080
 ```
-When this command runs, Cloudflare will generate a temporary URL that looks something like this:
-`https://nato-hope-programmes-ones.trycloudflare.com`
 
----
+Open the Symbiance extension popup and paste the tunnel's `https://...trycloudflare.com` URL into **Server address**. The popup converts it to `wss://`. Click **Save**; it creates a private room code when switching away from the local default. Share the tunnel URL and room code with the other viewers. Each viewer enters the same values in their extension popup. Open tabs reconnect when settings change.
 
-## Configuring the Extension
-
-Before installing the extension in your browser, you must point it to your newly generated Cloudflare Tunnel.
-
-1. Open `extension/websocket.js`.
-2. Locate the WebSocket connection block (around line 191).
-3. Replace the URL with your Cloudflare tunnel URL. **Make sure to change `https://` to `wss://`**.
-
-Example:
-```javascript
-socket = new WebSocket(
-    "wss://nato-hope-programmes-ones.trycloudflare.com"
-);
-```
+Quick Tunnel URLs change each time the tunnel restarts and are intended for testing. For a stable setup, use a [named Cloudflare Tunnel](https://developers.cloudflare.com/tunnel/get-started/) or another trusted HTTPS/WSS host. The local origin stays bound to `127.0.0.1`; do not expose its HTTP port directly to the internet.
 
 ---
 
@@ -87,11 +64,12 @@ socket = new WebSocket(
 1. Navigate to `about:debugging#/runtime/this-firefox`.
 2. Click **Load Temporary Add-on...**.
 3. Select the `manifest.json` file inside the project folder.
+4. Grant Symbiance access to the video sites in Firefox's Extensions menu.
 
 ---
 
 ## How to Use
 
 1. **Open a Supported Site:** Both you and your friend need to navigate to the identical video page (e.g., a specific episode on `aniwaves.ru`).
-2. **Automatic Connection:** Once the page loads, the extension will automatically connect to the WebSocket server and join the default watch party room (`test-room`).
+2. **Automatic Connection:** Once the page loads, the extension will connect to the local secure WebSocket server and join the default room (`test-room`).
 3. **Play the Video:** Press play! The extension will capture the `play`, `pause`, and `seek` events and broadcast them to everyone in the room. The receiving clients will automatically calculate the network transport latency and adjust their `<video>` start times so that you watch in perfect unison.

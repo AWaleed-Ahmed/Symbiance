@@ -13,6 +13,21 @@ let listenersAttached = false;
 
 // Guard to prevent echoing remote commands back to the server
 let applyingRemoteCommand = false;
+let remoteCommandTimer = null;
+
+function sendLocalPlayback(action, currentTime) {
+    if (isTopWindow()) {
+        sendPlaybackMessage(action, currentTime, Date.now());
+    } else {
+        const extensionAPI = typeof browser !== "undefined" ? browser : chrome;
+        extensionAPI.runtime.sendMessage({
+            type: "localPlayback",
+            action,
+            currentTime,
+            sentAt: Date.now()
+        });
+    }
+}
 
 /**
  * 2. Gets the video element from the DOM.
@@ -61,39 +76,21 @@ function initializePlaybackListeners() {
     video.addEventListener("play", () => {
         console.log("Symbiance: Local play detected at:", video.currentTime);
         if (!applyingRemoteCommand) {
-            window.parent.postMessage({
-                source: "symbiance",
-                type: "playback",
-                action: "play",
-                currentTime: video.currentTime,
-                sentAt: Date.now()
-            }, "*");
+            sendLocalPlayback("play", video.currentTime);
         }
     });
 
     video.addEventListener("pause", () => {
         console.log("Symbiance: Local pause detected at:", video.currentTime);
         if (!applyingRemoteCommand) {
-            window.parent.postMessage({
-                source: "symbiance",
-                type: "playback",
-                action: "pause",
-                currentTime: video.currentTime,
-                sentAt: Date.now()
-            }, "*");
+            sendLocalPlayback("pause", video.currentTime);
         }
     });
 
     video.addEventListener("seeking", () => {
         console.log("Symbiance: Local seek detected at:", video.currentTime);
         if (!applyingRemoteCommand) {
-            window.parent.postMessage({
-                source: "symbiance",
-                type: "playback",
-                action: "seek",
-                currentTime: video.currentTime,
-                sentAt: Date.now()
-            }, "*");
+            sendLocalPlayback("seek", video.currentTime);
         }
     });
 
@@ -131,6 +128,7 @@ initializePlaybackListeners();
 
 // 8. Listen for remote playback commands forwarded by the top window
 window.addEventListener("message", (event) => {
+    if (isTopWindow()) return;
     
     // SECURITY: Verify the message came from the parent or top window
     try {
@@ -147,6 +145,11 @@ window.addEventListener("message", (event) => {
     if (!data || typeof data !== "object") return;
     if (data.source !== "symbiance" || data.type !== "playback") return;
 
+    handleRemotePlayback(data);
+});
+
+function handleRemotePlayback(data) {
+
     const action = data.action;
     const currentTime = data.currentTime;
     const sentAt = data.sentAt;
@@ -154,8 +157,12 @@ window.addEventListener("message", (event) => {
     // Validate action type and currentTime
     if (
         (action === "play" || action === "pause" || action === "seek") && 
-        typeof currentTime === "number"
+        Number.isFinite(currentTime) && currentTime >= 0
     ) {
+        // Relay through intermediate frames even when they contain no video.
+        for (let i = 0; i < window.frames.length; i++) {
+            window.frames[i].postMessage({ ...data, source: "symbiance" }, "*");
+        }
         if (sentAt) {
             console.log(`Symbiance (Diagnostics): Video iframe received remote playback command. Total end-to-end latency: ${Date.now() - sentAt}ms`);
         } else {
@@ -170,6 +177,7 @@ window.addEventListener("message", (event) => {
         }
 
         applyingRemoteCommand = true;
+        clearTimeout(remoteCommandTimer);
 
         if (action === "play") {
             if (typeof sentAt === "number") {
@@ -204,8 +212,8 @@ window.addEventListener("message", (event) => {
 
         // Wait slightly to ensure local DOM events caused by these commands
         // are caught by the guard before releasing it.
-        setTimeout(() => {
+        remoteCommandTimer = setTimeout(() => {
             applyingRemoteCommand = false;
         }, 50);
     }
-});
+}
