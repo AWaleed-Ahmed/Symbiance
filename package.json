@@ -1,5 +1,50 @@
 {
+  "name": "symbiance",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Firefox watch rooms with automatic connection recovery",
+  "author": "Symbiance contributors",
+  "main": "desktop/main.js",
+  "scripts": {
+    "start": "electron .",
+    "server": "node server/server.js",
+    "test": "node --test tests/*.test.js",
+    "extension:build": "node scripts/extension.js build",
+    "extension:sign": "node scripts/extension.js sign",
+    "assets": "node scripts/assets.js",
+    "native:build": "pkg desktop/native-host.js --target node22-win-x64 --output assets/native/symbiance-bridge.exe",
+    "build:win": "npm run assets && npm run native:build && npm run extension:build && electron-builder --win portable nsis --x64",
+    "test:ui": "node scripts/test-ui.js"
+  },
+  "build": {
+    "appId": "com.symbiance.desktop",
+    "productName": "Symbiance",
+    "directories": { "output": "dist" },
+    "files": ["desktop/**/*", "server/relay.js", "package.json"],
+    "extraResources": [
+      { "from": "assets/cloudflared.exe", "to": "cloudflared.exe" },
+      { "from": "assets/native", "to": "native" },
+      { "from": "assets/licenses", "to": "licenses" },
+      { "from": "assets/extension", "to": "extension", "filter": ["*.xpi"] },
+      { "from": "THIRD-PARTY.md", "to": "THIRD-PARTY.md" }
+    ],
+    "win": {
+      "target": ["portable", "nsis"],
+      "signAndEditExecutable": false,
+      "artifactName": "Symbiance-${version}-${arch}.${ext}"
+    },
+    "portable": { "artifactName": "Symbiance-${version}-${arch}-portable.exe" },
+    "nsis": { "artifactName": "Symbiance-${version}-${arch}-setup.exe", "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true }
+  },
   "dependencies": {
+    "lucide": "^1.49.0",
     "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@yao-pkg/pkg": "^6.23.0",
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3",
+    "web-ext": "^10.7.0"
   }
 }

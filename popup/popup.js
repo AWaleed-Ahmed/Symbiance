@@ -37,7 +37,7 @@ form.addEventListener("submit", async event => {
             throw new Error("Room codes need 6-64 letters, numbers, or hyphens.");
         }
         const serverUrl = url.href;
-        await extensionAPI.storage.local.set({ serverUrl, roomId });
+        await extensionAPI.storage.local.set({ serverUrl, roomId, desktopPaused: false });
         serverInput.value = serverUrl;
         roomInput.value = roomId;
         showStatus("Saved. Share this room code with the other viewers.");

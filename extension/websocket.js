@@ -1,6 +1,7 @@
 /** Routes tab messages through the extension background connection. */
 let connectionPort = null;
 let joinedRoom = false;
+let reconnectTimer = null;
 
 function isTopWindow() {
     return window === window.top;
@@ -11,7 +12,8 @@ function sendWebSocketMessage(message) {
         console.warn("Symbiance: Not connected to the sync room yet.");
         return false;
     }
-    connectionPort.postMessage(message);
+    try { connectionPort.postMessage(message); }
+    catch { joinedRoom = false; return false; }
     return true;
 }
 
@@ -23,14 +25,22 @@ function sendPlaybackMessage(action, currentTime, sentAt) {
 
 function connectWebSocket() {
     const extensionAPI = typeof browser !== "undefined" ? browser : chrome;
-    connectionPort = extensionAPI.runtime.connect({ name: "symbiance" });
-    connectionPort.onMessage.addListener((message) => {
+    clearTimeout(reconnectTimer);
+    let current;
+    try { current = extensionAPI.runtime.connect({ name: "symbiance" }); }
+    catch { reconnectTimer = setTimeout(connectWebSocket, 2000); return; }
+    connectionPort = current;
+    joinedRoom = false;
+    current.onMessage.addListener((message) => {
+        if (connectionPort !== current) return;
         if (message.type === "joined") {
             joinedRoom = true;
             console.log("Symbiance: Joined room", message.roomId, "Clients:", message.clientCount);
             sendWebSocketMessage({ type: "identity", identity: getContentIdentity() });
         } else if (message.type === "localPlayback") {
             sendPlaybackMessage(message.action, message.currentTime, message.sentAt);
+        } else if (message.type === "requestPlayback") {
+            sendWebSocketMessage({ type: "snapshot" });
         } else if (message.type === "playback") {
             handleRemotePlayback({ ...message, source: "symbiance" });
         } else if (message.type === "identity") {
@@ -38,15 +48,26 @@ function connectWebSocket() {
                 matchContentIdentity(getContentIdentity(), message.identity));
         } else if (message.type === "error") {
             console.error("Symbiance:", message.message);
+        } else if (message.type === "connectionStatus" && !message.connected) {
+            joinedRoom = false;
         }
     });
-    connectionPort.onDisconnect.addListener(() => {
+    current.onDisconnect.addListener(() => {
+        if (connectionPort !== current) return;
+        void extensionAPI.runtime.lastError;
         connectionPort = null;
         joinedRoom = false;
-        console.warn("Symbiance: Extension connection lost. Reload this tab.");
+        reconnectTimer = setTimeout(connectWebSocket, 1000);
     });
 }
 
 if (isTopWindow()) {
     connectWebSocket();
+    window.addEventListener("pagehide", () => {
+        clearTimeout(reconnectTimer);
+        const current = connectionPort;
+        connectionPort = null;
+        if (current?.disconnect) current.disconnect();
+    });
+    window.addEventListener("pageshow", () => { if (!connectionPort) connectWebSocket(); });
 }

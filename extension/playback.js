@@ -95,6 +95,12 @@ function initializePlaybackListeners() {
     });
 
     listenersAttached = true;
+    const requestState = () => {
+        const extensionAPI = typeof browser !== "undefined" ? browser : chrome;
+        Promise.resolve(extensionAPI.runtime.sendMessage({ type: "requestPlayback" })).catch(() => {});
+    };
+    video.addEventListener("loadedmetadata", requestState);
+    requestState();
     console.log("Symbiance: Playback listeners successfully attached to video.");
 }
 

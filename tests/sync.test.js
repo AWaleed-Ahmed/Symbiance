@@ -22,8 +22,8 @@ function makeTab(onConnect, nested = false, hasVideo = true, tabId = 1) {
     };
     const incoming = signal(), outgoing = signal(), disconnect = signal();
     const port = { onMessage: incoming, onDisconnect: disconnect, postMessage: outgoing.emit };
-    const window = { frames: [{ postMessage(data) { downward.push(data); } }],
-        addEventListener(name, fn) { this.listener = fn; } };
+    const window = { frames: [{ postMessage(data) { downward.push(data); } }], listeners: {},
+        addEventListener(name, fn) { this.listeners[name] = fn; if (name === "message") this.listener = fn; } };
     window.top = nested ? { postMessage(data) { upward.push(data); } } : window;
     window.parent = window.top;
     const context = vm.createContext({ window, console: quiet, setTimeout, clearTimeout,
@@ -64,14 +64,14 @@ test("two tabs exchange playback through background WebSockets without echo", as
         browser: { runtime: { onConnect, onMessage: onConnect.onMessage },
             storage: { local: { get(defaults) { return Promise.resolve({ ...defaults, ...onConnect.settings }); } },
                 onChanged: onConnect.onChanged } },
-        console: quiet, setTimeout, clearTimeout, URL,
+        console: quiet, setTimeout, clearTimeout, setInterval, clearInterval, URL,
         WebSocket: class extends WebSocket {
             constructor(url) { super(`ws://localhost:${server.address().port}`); connectedUrls.push(url); }
         }
     });
     const a = makeTab(onConnect, false, true, 1), b = makeTab(onConnect, false, true, 2);
     async function until(predicate) {
-        const deadline = Date.now() + 2000;
+        const deadline = Date.now() + 5000;
         while (!predicate()) {
             assert.ok(Date.now() < deadline, "timed out waiting for sync");
             await new Promise(resolve => setTimeout(resolve, 10));
@@ -107,7 +107,13 @@ test("two tabs exchange playback through background WebSockets without echo", as
         a.video.currentTime = 58;
         a.events.seeking();
         await until(() => b.video.currentTime === 58);
+        for (const client of server.clients) client.terminate();
+        await until(() => connectedUrls.length === 6 && joined === 6);
+        a.video.currentTime = 63;
+        a.events.seeking();
+        await until(() => b.video.currentTime === 63);
     } finally {
+        a.window.listeners.pagehide(); b.window.listeners.pagehide();
         a.disconnect.emit(); b.disconnect.emit();
         for (const client of server.clients) client.terminate();
         await new Promise(resolve => server.close(resolve));
@@ -121,7 +127,7 @@ test("nested players send upward and receive through video-less intermediate fra
     onConnect.onMessage.addListener(message => sent.push(message));
     const child = makeTab(onConnect, true);
     child.events.play();
-    assert.equal(sent[0].action, "play");
+    assert.equal(sent.find(message => message.type === "localPlayback").action, "play");
     const middle = makeTab(onConnect, true, false);
     const message = { source: "symbiance", type: "playback", action: "seek", currentTime: 33 };
     middle.window.listener({ source: middle.window.parent, data: message });

@@ -1,5 +1,7 @@
 # Beginner's Guide to Symbiance
 
+For the Windows app, use the [desktop instructions](WINDOWS.md#for-viewers). Its EXE includes the server and tunnel helper. Once the publisher supplies the signed Firefox extension, users install it once and manage rooms from the app. The steps below are for the older developer setup.
+
 Symbiance lets two or more browser tabs follow the same video's play, pause, and seek actions. One computer runs the server. Everyone watching installs the extension.
 
 ## 1. Get the Files

@@ -1,2 +1,6 @@
 /node_modules
 /server/.local/
+/assets/
+/build/
+/dist/
+/test-results/

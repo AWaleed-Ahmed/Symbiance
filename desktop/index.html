@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'">
+    <title>Symbiance</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="brand"><i data-lucide="clapperboard"></i><span>Symbiance</span></div>
+        <nav aria-label="Main navigation">
+            <button class="nav active" data-view="make"><i data-lucide="plus"></i>Make a room</button>
+            <button class="nav" data-view="join"><i data-lucide="log-in"></i>Join a room</button>
+            <button class="nav" data-view="profile"><i data-lucide="user-round"></i>Profile</button>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="person"><span class="avatar" id="sidebarAvatar">V</span><span id="sidebarName">Viewer</span></div>
+            <div class="connection"><span class="status-dot" id="statusDot"></span><span id="connectionLabel">Offline</span></div>
+        </div>
+    </aside>
+    <main>
+        <header class="topbar"><span>WATCH TOGETHER</span><div class="integration"><i data-lucide="puzzle"></i><span id="extensionLabel">Firefox disconnected</span><button id="installExtension" class="quiet">Install extension</button></div></header>
+        <div id="notice" role="status" hidden></div>
+        <section class="view" id="makeView">
+            <div class="section-heading"><span class="eyebrow">YOUR WATCH PARTY</span><h1>Make a room</h1></div>
+            <form id="makeForm" class="form">
+                <label for="roomName">Room name</label><input id="roomName" maxlength="80" value="Tonight's watch party" required>
+                <button type="submit" class="primary"><i data-lucide="plus"></i><span id="makeLabel">Create room</span></button>
+            </form>
+        </section>
+        <section class="view" id="joinView" hidden>
+            <div class="section-heading"><span class="eyebrow">AN INVITATION TO WATCH</span><h1>Join a room</h1></div>
+            <form id="joinForm" class="form">
+                <label for="invitation">Room invitation</label><textarea id="invitation" rows="4" required spellcheck="false" placeholder="symbiance:..."></textarea>
+                <button type="submit" class="primary"><i data-lucide="log-in"></i>Join room</button>
+            </form>
+        </section>
+        <section class="view" id="profileView" hidden>
+            <div class="section-heading"><span class="eyebrow">YOUR PLACE IN THE ROOM</span><h1>Profile</h1></div>
+            <form id="profileForm" class="form">
+                <span class="avatar large" id="profileAvatar">V</span>
+                <label for="profileName">Display name</label><input id="profileName" maxlength="32" required>
+                <fieldset><legend>Profile color</legend><div id="colors" class="swatches"></div></fieldset>
+                <button type="submit" class="primary"><i data-lucide="check"></i>Save profile</button>
+            </form>
+        </section>
+        <section id="roomView" hidden>
+            <div class="room-heading"><div><span class="eyebrow" id="roomRole">HOSTING</span><h1 id="activeRoomName"></h1></div><button id="leaveRoom" class="icon-button" title="Leave room" aria-label="Leave room"><i data-lucide="log-out"></i></button></div>
+            <div class="room-layout">
+                <div class="room-main">
+                    <label for="shareInvite">Room invitation</label><div class="invite-row"><input id="shareInvite" readonly><button id="copyInvite" class="icon-button" title="Copy invitation" aria-label="Copy invitation"><i data-lucide="copy"></i></button></div>
+                    <form id="videoForm"><label for="videoUrl">Video page</label><input id="videoUrl" type="url" required placeholder="https://" autocomplete="off"><button class="primary" type="submit"><i data-lucide="external-link"></i>Open in Firefox</button></form>
+                    <div class="room-status"><i data-lucide="radio"></i><span id="roomConnection">Connecting</span></div>
+                </div>
+                <aside class="members"><h2>In the room <span id="memberCount">0</span></h2><ul id="memberList"></ul></aside>
+            </div>
+        </section>
+        <footer><span>SYMBIANCE</span><span id="footerStatus">Ready when you are</span></footer>
+    </main>
+    <script src="../node_modules/lucide/dist/umd/lucide.js"></script>
+    <script src="renderer.js"></script>
+</body>
+</html>

@@ -1,5 +1,11 @@
 # Symbiance
 
+## Windows App
+
+The desktop app provides **Make a room**, **Join a room**, and **Profile**, bundles the server and Cloudflare helper, and automatically reconnects Firefox tabs. See [Windows setup and release instructions](WINDOWS.md). Permanent Firefox installation requires a Mozilla-signed extension; developer builds cannot bypass that requirement.
+
+The command-line instructions below are retained for development and standalone relay use.
+
 Symbiance is a browser extension and WebSocket server combination for synchronizing HTML5 video playback between tabs.
 
 The extension's background process connects each tab to the local secure WebSocket server. The server relays play, pause, and seek commands to the other tabs in the room.
