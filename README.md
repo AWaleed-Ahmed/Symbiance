@@ -1,103 +1,52 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/branding/symbiance-wordmark-white.png">
+    <source media="(prefers-color-scheme: light)" srcset="assets/branding/symbiance-wordmark-dark.png">
+    <img src="assets/branding/symbiance-wordmark-white.png" alt="Symbiance" width="680">
+  </picture>
+</p>
+
 # Symbiance
 
-## Download Preview
+**Different sofas. Same scene.**
 
-[Windows portable EXE](https://github.com/AWaleed-Ahmed/Symbiance/releases/download/v0.2.0-preview.1/Symbiance-0.2.0-x64-portable.exe) | [Windows installer](https://github.com/AWaleed-Ahmed/Symbiance/releases/download/v0.2.0-preview.1/Symbiance-0.2.0-x64-setup.exe) | [Ubuntu/Debian DEB](https://github.com/AWaleed-Ahmed/Symbiance/releases/download/v0.2.0-preview.1/Symbiance-0.2.0-amd64.deb) | [Linux tar.gz](https://github.com/AWaleed-Ahmed/Symbiance/releases/download/v0.2.0-preview.1/Symbiance-0.2.0-x64.tar.gz)
+Movie night should not need a countdown, three false starts, and someone yelling "what timestamp are you at?"
 
-These x64 preview packages bundle Node.js and Cloudflare. Install Firefox separately and temporarily load the unsigned extension included on the [release page](https://github.com/AWaleed-Ahmed/Symbiance/releases/tag/v0.2.0-preview.1). Permanent Firefox installation still requires Mozilla signing. The command-line setup below is for development.
+Symbiance brings your Firefox video players into the same watch room. Play, pause, or seek, and the other viewers follow along. You bring the video and the snacks; Symbiance handles the awkward timing bit.
 
-Symbiance is a browser extension and WebSocket server combination designed for perfectly synchronizing video playback across multiple browsers and devices. It allows you to host private watch parties by coordinating standard HTML5 `<video>` events (Play, Pause, Seek) in real-time, completely bypassing CORS restrictions via cross-origin `postMessage` bridges.
+[Download a release](https://github.com/AWaleed-Ahmed/Symbiance/releases) · [User manual](user_manual.md) · [Build from source](build_steps.md)
 
-This project uses a hub-and-spoke architecture: 
-1. The **Top Window** of the webpage communicates securely with child iframes holding the `<video>`.
-2. A single **WebSocket connection** is routed through a secure **Cloudflare Tunnel** to a centralized Node.js server.
-3. The server broadcasts the playback state and utilizes **Timestamp Latency Compensation** to mathematically sync the play times down to the millisecond.
+## Grab Your Copy
 
----
+Open **[Releases](https://github.com/AWaleed-Ahmed/Symbiance/releases)**, choose a release, then expand **Assets**. On the repository page, Releases is also linked in the right sidebar on desktop.
 
-## Prerequisites
+The current download is **[v0.2.0-preview.1](https://github.com/AWaleed-Ahmed/Symbiance/releases/tag/v0.2.0-preview.1)**, an unsigned x64 preview:
 
-> **🚨 Non-programmer or never used GitHub? Start here:** Check out our **[Beginner's Guide (for-noobs.md)](for-noobs.md)** for a super simple, step-by-step setup tutorial without the developer jargon!
+| Your computer | Download |
+| --- | --- |
+| Windows, no installation | [Portable EXE](https://github.com/AWaleed-Ahmed/Symbiance/releases/download/v0.2.0-preview.1/Symbiance-0.2.0-x64-portable.exe) |
+| Windows, installed app | [Setup EXE](https://github.com/AWaleed-Ahmed/Symbiance/releases/download/v0.2.0-preview.1/Symbiance-0.2.0-x64-setup.exe) |
+| Ubuntu / Debian | [DEB package](https://github.com/AWaleed-Ahmed/Symbiance/releases/download/v0.2.0-preview.1/Symbiance-0.2.0-amd64.deb) |
+| Linux, extracted app | [tar.gz archive](https://github.com/AWaleed-Ahmed/Symbiance/releases/download/v0.2.0-preview.1/Symbiance-0.2.0-x64.tar.gz) |
+| Firefox, required on both computers | [Extension ZIP](https://github.com/AWaleed-Ahmed/Symbiance/releases/download/v0.2.0-preview.1/symbiance-0.2.0.zip) |
 
-To host the WebSocket server, you will need **Node.js** and **Cloudflared** (Cloudflare Tunnel).
+Download the app **and** the extension ZIP. The automatically generated **Source code** archives are not ready-to-run apps. Checksums are in `SHA256SUMS` on the release page.
 
-### Installing Cloudflared
+## Start the Watch Party
 
-**Windows:**
-Open Command Prompt or PowerShell and run:
-```cmd
-winget install Cloudflare.cloudflared
-```
+1. Install Firefox 140 or newer and launch Symbiance on both computers. Node.js and Cloudflare are bundled; no separate setup is needed.
+2. Extract the extension ZIP. In Firefox, open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select the extracted `manifest.json`.
+3. One person chooses **Make a room**, clicks **Create room**, and sends the copied invitation to their friend.
+4. The friend chooses **Join a room**, pastes the invitation, and clicks **Join room**.
+5. Open the same video in Firefox on both computers. Allow the extension on that site, press play once if Firefox blocks autoplay, and keep both apps open.
 
-**Linux (Debian/Ubuntu):**
-Download and install the latest `.deb` package:
-```bash
-curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
-sudo dpkg -i cloudflared.deb
-```
+Windows and Ubuntu use the same room protocol, so they can share a room. Real two-computer playback still needs testing; this is a preview, not a promise of perfect sync on every website.
 
-**macOS:**
-```bash
-brew install cloudflare/cloudflare/cloudflared
-```
+## The Small Print
 
----
+- The Firefox extension is **not signed yet**. Temporary loading is manual and must be repeated after Firefox restarts. The app's extension-install button is disabled in this preview.
+- The Windows builds are also unsigned and may show an unknown-publisher warning.
+- Everyone needs their own access to the same video. Symbiance syncs playback controls; it does not stream the video to your friend or bypass subscriptions.
+- Keep invitations private. When the host restarts the room or tunnel, share the new invitation.
 
-## How to Run the Server
-
-You need two terminal windows to host the server and expose it to the internet securely.
-
-### 1. Start the WebSocket Server
-In your first terminal, navigate to the root of the project and start the Node server. By default, it listens on port `8080`.
-```bash
-node server/server.js
-```
-*(If you haven't installed dependencies yet, run `npm install` inside the `server/` folder to install the `ws` library).*
-
-### 2. Start the Cloudflare Tunnel
-In your second terminal, create a secure tunnel pointing to your local port `8080`:
-```bash
-cloudflared tunnel --url http://localhost:8080
-```
-When this command runs, Cloudflare will generate a temporary URL that looks something like this:
-`https://nato-hope-programmes-ones.trycloudflare.com`
-
----
-
-## Configuring the Extension
-
-Before installing the extension in your browser, you must point it to your newly generated Cloudflare Tunnel.
-
-1. Open `extension/websocket.js`.
-2. Locate the WebSocket connection block (around line 191).
-3. Replace the URL with your Cloudflare tunnel URL. **Make sure to change `https://` to `wss://`**.
-
-Example:
-```javascript
-socket = new WebSocket(
-    "wss://nato-hope-programmes-ones.trycloudflare.com"
-);
-```
-
----
-
-## Installing the Extension
-
-### Google Chrome / Brave / Edge
-1. Navigate to the Extensions page (`chrome://extensions/`).
-2. Toggle **Developer mode** on in the top-right corner.
-3. Click **Load unpacked** in the top-left corner.
-4. Select the root folder of this project (the folder containing `manifest.json`).
-
-### Mozilla Firefox
-1. Navigate to `about:debugging#/runtime/this-firefox`.
-2. Click **Load Temporary Add-on...**.
-3. Select the `manifest.json` file inside the project folder.
-
----
-
-## How to Use
-
-1. **Open a Supported Site:** Both you and your friend need to navigate to the identical video page (e.g., a specific episode on `aniwaves.ru`).
-2. **Automatic Connection:** Once the page loads, the extension will automatically connect to the WebSocket server and join the default watch party room (`test-room`).
-3. **Play the Video:** Press play! The extension will capture the `play`, `pause`, and `seek` events and broadcast them to everyone in the room. The receiving clients will automatically calculate the network transport latency and adjust their `<video>` start times so that you watch in perfect unison.
+Need installation steps or troubleshooting? Read the **[user manual](user_manual.md)**. Want to run the source code or make packages? Head to **[build_steps.md](build_steps.md)**.
