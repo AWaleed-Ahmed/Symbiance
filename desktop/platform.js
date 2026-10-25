@@ -12,4 +12,10 @@ function helperNames(platform = process.platform) {
         : { tunnel: "cloudflared", native: "symbiance-bridge" };
 }
 
-module.exports = { dataDirectory, helperNames };
+function firefoxCandidates(platform = process.platform, env = process.env) {
+    if (platform === "linux") return ["/usr/bin/firefox", "/usr/bin/firefox-esr", "/usr/local/bin/firefox", "/snap/bin/firefox"];
+    return [env.ProgramFiles, env["ProgramFiles(x86)"], env.LOCALAPPDATA]
+        .filter(Boolean).map(root => path.join(root, "Mozilla Firefox", "firefox.exe"));
+}
+
+module.exports = { dataDirectory, helperNames, firefoxCandidates };

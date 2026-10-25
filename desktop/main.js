@@ -6,7 +6,7 @@ const os = require("node:os");
 const { Controller } = require("./controller");
 const { createConnector } = require("./connector");
 const { installNativeHost } = require("./native-install");
-const { dataDirectory, helperNames } = require("./platform");
+const { dataDirectory, helperNames, firefoxCandidates } = require("./platform");
 
 app.setName("Symbiance");
 let window;
@@ -18,10 +18,7 @@ const helperResources = () => app.isPackaged ? process.resourcesPath : path.join
 const smokeTest = !app.isPackaged && process.argv.includes("--smoke-test");
 
 async function firefox(file) {
-    const candidates = process.platform === "linux" ? ["/usr/bin/firefox", "/usr/local/bin/firefox", "/snap/bin/firefox"]
-        : [process.env.ProgramFiles, process.env["ProgramFiles(x86)"], process.env.LOCALAPPDATA]
-        .filter(Boolean).map(root => path.join(root, "Mozilla Firefox", "firefox.exe"));
-    const binary = candidates.find(candidate => fs.existsSync(candidate));
+    const binary = firefoxCandidates().find(candidate => fs.existsSync(candidate));
     if (!binary) throw new Error("Firefox is not installed in a standard location.");
     const child = spawn(binary, [file], { detached: true, stdio: "ignore", windowsHide: true });
     await new Promise((resolve, reject) => { child.once("spawn", resolve); child.once("error", reject); });

@@ -10,8 +10,8 @@ function decodeInvite(value) {
     catch { throw new Error("This invitation is incomplete or invalid."); }
     let url;
     try { url = new URL(invite.serverUrl); } catch { throw new Error("This invitation has an invalid server address."); }
-    if (invite.v !== 1 || url.protocol !== "wss:" || url.username || url.password ||
-        !/^[A-Za-z0-9-]{6,128}$/.test(invite.roomId)) throw new Error("This invitation is not supported.");
+    if (invite.v !== 1 || url.protocol !== "wss:" || url.username || url.password || typeof invite.roomId !== "string" ||
+        !/^[A-Za-z0-9-]{6,64}$/.test(invite.roomId)) throw new Error("This invitation is not supported.");
     return { serverUrl: url.href, roomId: invite.roomId, name: String(invite.name || "Watch room").slice(0, 80) };
 }
 module.exports = { encodeInvite, decodeInvite };

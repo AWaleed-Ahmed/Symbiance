@@ -1,4 +1,3 @@
-/** Routes tab messages through the extension background connection. */
 let connectionPort = null;
 let joinedRoom = false;
 let reconnectTimer = null;

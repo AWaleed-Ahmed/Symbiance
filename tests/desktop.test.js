@@ -11,7 +11,7 @@ const { RoomClient } = require("../desktop/room-client");
 const { Controller } = require("../desktop/controller");
 const { createConnector } = require("../desktop/connector");
 const { spawn } = require("node:child_process");
-const { helperNames, dataDirectory } = require("../desktop/platform");
+const { helperNames, dataDirectory, firefoxCandidates } = require("../desktop/platform");
 const { installNativeHost } = require("../desktop/native-install");
 
 async function until(predicate, timeout = 5000) {
@@ -50,6 +50,12 @@ test("Linux native messaging registration points Firefox at the bundled helper",
     assert.deepEqual(manifest.allowed_extensions, ["symbiance@awaleed-ahmed.github.io"]);
 });
 
+test("Firefox discovery supports Debian ESR and Windows installation paths", () => {
+    assert.ok(firefoxCandidates("linux").includes("/usr/bin/firefox-esr"));
+    assert.deepEqual(firefoxCandidates("win32", { ProgramFiles: "C:/Program Files" }),
+        [path.join("C:/Program Files", "Mozilla Firefox", "firefox.exe")]);
+});
+
 test("invitations reject insecure endpoints, malformed codes and embedded credentials", () => {
     const room = { roomId: "private-room-123", serverUrl: "wss://example.trycloudflare.com", name: "Movie night" };
     assert.deepEqual(decodeInvite(encodeInvite(room)), { ...room, serverUrl: room.serverUrl + "/" });
@@ -58,6 +64,9 @@ test("invitations reject insecure endpoints, malformed codes and embedded creden
     }
     assert.throws(() => decodeInvite("broken"));
     assert.throws(() => decodeInvite(encodeInvite({ ...room, roomId: "bad" })));
+    assert.equal(decodeInvite(encodeInvite({ ...room, roomId: "a".repeat(64) })).roomId.length, 64);
+    assert.throws(() => decodeInvite(encodeInvite({ ...room, roomId: "a".repeat(65) })));
+    assert.throws(() => decodeInvite(encodeInvite({ ...room, roomId: 123456 })));
 });
 
 test("relay isolates rooms, deduplicates profiles and restores playback to reconnecting tabs", async t => {

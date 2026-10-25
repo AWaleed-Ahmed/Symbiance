@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - feat/windows-desktop-rooms
   workflow_dispatch:
 
 permissions:

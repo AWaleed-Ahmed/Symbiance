@@ -30,7 +30,6 @@ extensionAPI.runtime.onMessage.addListener((message, sender) => {
     if (port) port.postMessage(message);
 });
 
-// Each tab needs its own server client so the server can relay between tabs.
 extensionAPI.runtime.onConnect.addListener((port) => {
     if (port.name !== "symbiance") return;
 
@@ -119,7 +118,6 @@ extensionAPI.runtime.onConnect.addListener((port) => {
     reload();
 });
 
-// The native connection keeps the background active and receives desktop room settings.
 if (extensionAPI.runtime.connectNative) {
     let nativePort;
     let nativeRetry;

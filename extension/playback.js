@@ -165,7 +165,6 @@ function handleRemotePlayback(data) {
         (action === "play" || action === "pause" || action === "seek") && 
         Number.isFinite(currentTime) && currentTime >= 0
     ) {
-        // Relay through intermediate frames even when they contain no video.
         for (let i = 0; i < window.frames.length; i++) {
             window.frames[i].postMessage({ ...data, source: "symbiance" }, "*");
         }
