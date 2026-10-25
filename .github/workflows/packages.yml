@@ -6,6 +6,7 @@ on:
     branches:
       - main
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -41,6 +42,7 @@ jobs:
         with:
           name: symbiance-${{ runner.os }}-x64
           if-no-files-found: error
+          compression-level: 0
           path: |
             dist/*.deb
             dist/*.tar.gz

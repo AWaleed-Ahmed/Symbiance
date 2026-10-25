@@ -1,0 +1,35 @@
+name: Preview Release
+
+on:
+  push:
+    tags:
+      - 'v*-preview.*'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/packages.yml
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: symbiance-*-x64
+          path: release-artifacts
+      - run: node scripts/prepare-release.js release-artifacts release-assets
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+      - run: gh release create "$RELEASE_TAG" release-assets/* --verify-tag --prerelease --title "Symbiance $RELEASE_TAG" --notes-file .github/preview-release.txt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}

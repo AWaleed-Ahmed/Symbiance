@@ -1,0 +1,12 @@
+Symbiance development preview for Windows and Ubuntu/Debian x64.
+
+Downloads:
+- Windows: portable.exe runs without installation; setup.exe installs the app.
+- Ubuntu/Debian: install the .deb package, or extract the .tar.gz archive and launch symbiance.
+- Firefox: extract the included symbiance-0.2.0.zip and load its manifest.json through about:debugging > This Firefox > Load Temporary Add-on. Grant access to the video sites on both computers. Repeat after restarting Firefox.
+
+Node.js, the native messaging helper, and Cloudflare are bundled. Firefox must be installed separately. Keep the host app running, share its room invitation, and open the same video in Firefox on both computers.
+
+This is an unsigned preview. Windows may show an unknown-publisher warning. Normal permanent Firefox installation is unavailable until Mozilla signs the add-on. A real Windows-to-Ubuntu Firefox session and Ubuntu Snap native integration still need user testing. Quick Tunnel invitations change when the host restarts its tunnel.
+
+SHA256SUMS contains checksums for all package and extension downloads.

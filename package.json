@@ -14,9 +14,10 @@
     "assets": "node scripts/assets.js",
     "native:build": "pkg desktop/native-host.js --target node22-win-x64 --output assets/win32/native/symbiance-bridge.exe",
     "native:build:linux": "pkg desktop/native-host.js --target node22-linux-x64 --output assets/linux/native/symbiance-bridge",
-    "build:win": "npm run assets -- win32 && npm run native:build && npm run extension:build && electron-builder --win portable nsis --x64",
-    "build:win:portable": "npm run assets -- win32 && npm run native:build && npm run extension:build && electron-builder --win portable --x64",
-    "build:linux": "npm run assets -- linux && npm run native:build:linux && npm run extension:build && electron-builder --linux deb tar.gz --x64",
+    "build:win": "npm run assets -- win32 && npm run native:build && npm run extension:build && electron-builder --win portable nsis --x64 --publish never",
+    "build:win:portable": "npm run assets -- win32 && npm run native:build && npm run extension:build && electron-builder --win portable --x64 --publish never",
+    "build:linux": "npm run assets -- linux && npm run native:build:linux && npm run extension:build && electron-builder --linux deb tar.gz --x64 --publish never",
+    "release:prepare": "node scripts/prepare-release.js",
     "test:ui": "node scripts/test-ui.js",
     "test:packaged": "node scripts/test-packaged.js",
     "test:compatibility": "node scripts/test-compatibility.js"

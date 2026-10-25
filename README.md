@@ -1,5 +1,11 @@
 # Symbiance
 
+## Download Preview
+
+[Windows portable EXE](https://github.com/AWaleed-Ahmed/Symbiance/releases/download/v0.2.0-preview.1/Symbiance-0.2.0-x64-portable.exe) | [Windows installer](https://github.com/AWaleed-Ahmed/Symbiance/releases/download/v0.2.0-preview.1/Symbiance-0.2.0-x64-setup.exe) | [Ubuntu/Debian DEB](https://github.com/AWaleed-Ahmed/Symbiance/releases/download/v0.2.0-preview.1/Symbiance-0.2.0-amd64.deb) | [Linux tar.gz](https://github.com/AWaleed-Ahmed/Symbiance/releases/download/v0.2.0-preview.1/Symbiance-0.2.0-x64.tar.gz)
+
+These x64 preview packages bundle Node.js and Cloudflare. Install Firefox separately and temporarily load the unsigned extension included on the [release page](https://github.com/AWaleed-Ahmed/Symbiance/releases/tag/v0.2.0-preview.1). Permanent Firefox installation still requires Mozilla signing. The command-line setup below is for development.
+
 Symbiance is a browser extension and WebSocket server combination designed for perfectly synchronizing video playback across multiple browsers and devices. It allows you to host private watch parties by coordinating standard HTML5 `<video>` events (Play, Pause, Seek) in real-time, completely bypassing CORS restrictions via cross-origin `postMessage` bridges.
 
 This project uses a hub-and-spoke architecture: 
