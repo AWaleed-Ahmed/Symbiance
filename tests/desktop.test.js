@@ -11,6 +11,8 @@ const { RoomClient } = require("../desktop/room-client");
 const { Controller } = require("../desktop/controller");
 const { createConnector } = require("../desktop/connector");
 const { spawn } = require("node:child_process");
+const { helperNames, dataDirectory } = require("../desktop/platform");
+const { installNativeHost } = require("../desktop/native-install");
 
 async function until(predicate, timeout = 5000) {
     const deadline = Date.now() + timeout;
@@ -28,6 +30,25 @@ async function peer(relay, roomId, id = roomId) {
     await until(() => messages.some(message => message.type === "joined"));
     return { socket, messages };
 }
+
+test("desktop and native helper agree on Windows and Linux resource paths", () => {
+    assert.equal(dataDirectory("win32", { APPDATA: "C:/Users/Viewer/AppData/Roaming" }),
+        path.join("C:/Users/Viewer/AppData/Roaming", "Symbiance"));
+    assert.equal(dataDirectory("linux", { XDG_CONFIG_HOME: "/custom/config", HOME: "/home/viewer" }), path.join("/custom/config", "Symbiance"));
+    assert.equal(dataDirectory("linux", { HOME: "/home/viewer" }), path.join("/home/viewer", ".config", "Symbiance"));
+    assert.deepEqual(helperNames("linux"), { tunnel: "cloudflared", native: "symbiance-bridge" });
+    assert.deepEqual(helperNames("win32"), { tunnel: "cloudflared.exe", native: "symbiance-bridge.exe" });
+});
+
+test("Linux native messaging registration points Firefox at the bundled helper", async t => {
+    const home = await fs.mkdtemp(path.join(os.tmpdir(), "symbiance-registration-"));
+    t.after(() => fs.rm(home, { recursive: true, force: true }));
+    await installNativeHost(home, process.execPath, { platform: "linux", home });
+    const manifest = JSON.parse(await fs.readFile(path.join(home, ".mozilla", "native-messaging-hosts", "com.symbiance.bridge.json")));
+    assert.equal(manifest.path, process.execPath);
+    assert.equal(manifest.type, "stdio");
+    assert.deepEqual(manifest.allowed_extensions, ["symbiance@awaleed-ahmed.github.io"]);
+});
 
 test("invitations reject insecure endpoints, malformed codes and embedded credentials", () => {
     const room = { roomId: "private-room-123", serverUrl: "wss://example.trycloudflare.com", name: "Movie night" };
@@ -109,11 +130,11 @@ test("native bridge uses authenticated loopback and framed messages without Node
     await fs.mkdir(directory);
     const config = { roomId: "private-native", serverUrl: "wss://example.com" };
     const connector = await createConnector(directory, () => config, () => {});
-    const executable = path.join(__dirname, "..", "assets", "native", "symbiance-bridge.exe");
+    const executable = path.join(__dirname, "..", "assets", process.platform, "native", helperNames().native);
     const binaryExists = await fs.access(executable).then(() => true, () => false);
     const child = spawn(binaryExists ? executable : process.execPath,
         binaryExists ? [] : [path.join(__dirname, "..", "desktop", "native-host.js")],
-        { env: { ...process.env, APPDATA: appData }, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
+        { env: { ...process.env, APPDATA: appData, XDG_CONFIG_HOME: appData, PATH: binaryExists ? "" : process.env.PATH }, windowsHide: true, stdio: ["pipe", "pipe", "pipe"] });
     t.after(async () => { child.stdin.end(); await once(child, "exit"); await connector.close(); await fs.rm(appData, { recursive: true, force: true }); });
     let input = Buffer.alloc(0);
     const messages = [];

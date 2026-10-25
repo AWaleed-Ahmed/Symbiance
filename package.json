@@ -12,9 +12,14 @@
     "extension:build": "node scripts/extension.js build",
     "extension:sign": "node scripts/extension.js sign",
     "assets": "node scripts/assets.js",
-    "native:build": "pkg desktop/native-host.js --target node22-win-x64 --output assets/native/symbiance-bridge.exe",
-    "build:win": "npm run assets && npm run native:build && npm run extension:build && electron-builder --win portable nsis --x64",
-    "test:ui": "node scripts/test-ui.js"
+    "native:build": "pkg desktop/native-host.js --target node22-win-x64 --output assets/win32/native/symbiance-bridge.exe",
+    "native:build:linux": "pkg desktop/native-host.js --target node22-linux-x64 --output assets/linux/native/symbiance-bridge",
+    "build:win": "npm run assets -- win32 && npm run native:build && npm run extension:build && electron-builder --win portable nsis --x64",
+    "build:win:portable": "npm run assets -- win32 && npm run native:build && npm run extension:build && electron-builder --win portable --x64",
+    "build:linux": "npm run assets -- linux && npm run native:build:linux && npm run extension:build && electron-builder --linux deb tar.gz --x64",
+    "test:ui": "node scripts/test-ui.js",
+    "test:packaged": "node scripts/test-packaged.js",
+    "test:compatibility": "node scripts/test-compatibility.js"
   },
   "build": {
     "appId": "com.symbiance.desktop",
@@ -22,19 +27,31 @@
     "directories": { "output": "dist" },
     "files": ["desktop/**/*", "server/relay.js", "package.json"],
     "extraResources": [
-      { "from": "assets/cloudflared.exe", "to": "cloudflared.exe" },
-      { "from": "assets/native", "to": "native" },
       { "from": "assets/licenses", "to": "licenses" },
       { "from": "assets/extension", "to": "extension", "filter": ["*.xpi"] },
-      { "from": "THIRD-PARTY.md", "to": "THIRD-PARTY.md" }
+      { "from": "THIRD-PARTY.txt", "to": "THIRD-PARTY.txt" }
     ],
     "win": {
+      "extraResources": [
+        { "from": "assets/win32/cloudflared.exe", "to": "cloudflared.exe" },
+        { "from": "assets/win32/native", "to": "native" }
+      ],
       "target": ["portable", "nsis"],
       "signAndEditExecutable": false,
       "artifactName": "Symbiance-${version}-${arch}.${ext}"
     },
     "portable": { "artifactName": "Symbiance-${version}-${arch}-portable.exe" },
-    "nsis": { "artifactName": "Symbiance-${version}-${arch}-setup.exe", "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true }
+    "nsis": { "artifactName": "Symbiance-${version}-${arch}-setup.exe", "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true },
+    "linux": {
+      "target": ["deb", "tar.gz"],
+      "category": "AudioVideo",
+      "maintainer": "Symbiance contributors <symbiance@awaleed-ahmed.github.io>",
+      "artifactName": "Symbiance-${version}-${arch}.${ext}",
+      "extraResources": [
+        { "from": "assets/linux/cloudflared", "to": "cloudflared" },
+        { "from": "assets/linux/native", "to": "native" }
+      ]
+    }
   },
   "dependencies": {
     "lucide": "^1.49.0",

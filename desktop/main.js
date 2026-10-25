@@ -6,6 +6,7 @@ const os = require("node:os");
 const { Controller } = require("./controller");
 const { createConnector } = require("./connector");
 const { installNativeHost } = require("./native-install");
+const { dataDirectory, helperNames } = require("./platform");
 
 app.setName("Symbiance");
 let window;
@@ -13,10 +14,12 @@ let controller;
 let connector;
 let quitting = false;
 const resources = () => app.isPackaged ? process.resourcesPath : path.join(__dirname, "..", "assets");
+const helperResources = () => app.isPackaged ? process.resourcesPath : path.join(resources(), process.platform);
 const smokeTest = !app.isPackaged && process.argv.includes("--smoke-test");
 
 async function firefox(file) {
-    const candidates = [process.env.ProgramFiles, process.env["ProgramFiles(x86)"], process.env.LOCALAPPDATA]
+    const candidates = process.platform === "linux" ? ["/usr/bin/firefox", "/usr/local/bin/firefox", "/snap/bin/firefox"]
+        : [process.env.ProgramFiles, process.env["ProgramFiles(x86)"], process.env.LOCALAPPDATA]
         .filter(Boolean).map(root => path.join(root, "Mozilla Firefox", "firefox.exe"));
     const binary = candidates.find(candidate => fs.existsSync(candidate));
     if (!binary) throw new Error("Firefox is not installed in a standard location.");
@@ -56,11 +59,12 @@ if (!app.requestSingleInstanceLock()) app.quit();
 else {
     app.on("second-instance", () => { if (window) { window.restore(); window.focus(); } });
     app.whenReady().then(async () => {
-        const directory = smokeTest ? fs.mkdtempSync(path.join(os.tmpdir(), "symbiance-ui-")) : path.join(app.getPath("appData"), "Symbiance");
-        controller = new Controller({ directory, tunnelBinary: path.join(resources(), "cloudflared.exe") });
+        const directory = smokeTest ? fs.mkdtempSync(path.join(os.tmpdir(), "symbiance-ui-")) : dataDirectory();
+        const helpers = helperNames();
+        controller = new Controller({ directory, tunnelBinary: path.join(helperResources(), helpers.tunnel) });
         await controller.initialize();
         controller.state.extensionSigned = fs.existsSync(path.join(resources(), "extension", "symbiance-signed.xpi"));
-        try { if (!smokeTest) await installNativeHost(directory, path.join(resources(), "native", "symbiance-bridge.exe")); }
+        try { if (!smokeTest) await installNativeHost(directory, path.join(helperResources(), "native", helpers.native)); }
         catch (error) { controller.state.error = error.message; }
         connector = await createConnector(directory, () => controller.configuration(), count => {
             controller.state.extensionConnected = count > 0; controller.update();

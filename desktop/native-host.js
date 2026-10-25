@@ -1,6 +1,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { WebSocket } = require("ws");
+const { dataDirectory } = require("./platform");
 
 let input = Buffer.alloc(0);
 let socket;
@@ -16,7 +17,7 @@ function connect() {
     if (stopped) return;
     let configuration;
     try {
-        configuration = JSON.parse(fs.readFileSync(path.join(process.env.APPDATA, "Symbiance", "connector.json"), "utf8"));
+        configuration = JSON.parse(fs.readFileSync(path.join(dataDirectory(), "connector.json"), "utf8"));
         if (!Number.isInteger(configuration.port) || configuration.port < 1 || configuration.port > 65535 ||
             !/^[a-f0-9]{64}$/.test(configuration.token)) throw new Error();
     } catch {

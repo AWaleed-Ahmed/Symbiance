@@ -1,0 +1,50 @@
+name: Package Checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - feat/windows-desktop-rooms
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: ${{ matrix.os }} package
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            build: build:linux
+          - os: windows-latest
+            build: build:win
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - run: npm run ${{ matrix.build }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - run: npm test
+      - if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:packaged -- dist/linux-unpacked/symbiance --launch-only
+      - uses: actions/upload-artifact@v4
+        with:
+          name: symbiance-${{ runner.os }}-x64
+          if-no-files-found: error
+          path: |
+            dist/*.deb
+            dist/*.tar.gz
+            dist/*-portable.exe
+            dist/*-setup.exe
+            dist/extension/*.zip
