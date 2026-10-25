@@ -6,8 +6,6 @@
   </picture>
 </p>
 
-# Symbiance
-
 **Different sofas. Same scene.**
 
 Movie night should not need a countdown, three false starts, and someone yelling "what timestamp are you at?"
