@@ -1,8 +1,27 @@
 {
     "manifest_version": 3,
     "name": "Symbiance",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Synchronize video playback between friends.",
+    "permissions": ["storage", "nativeMessaging"],
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "symbiance@awaleed-ahmed.github.io",
+            "strict_min_version": "140.0",
+            "data_collection_permissions": {
+                "required": ["browsingActivity", "websiteContent", "personallyIdentifyingInfo"]
+            }
+        }
+    },
+    "action": {
+        "default_title": "Symbiance",
+        "default_popup": "popup/popup.html"
+    },
+    "background": {
+        "scripts": ["background.js"],
+        "service_worker": "background.js"
+    },
+    "host_permissions": ["http://*/*", "https://*/*"],
     "content_scripts": [
         {
             "matches": [
@@ -16,7 +35,8 @@
                 "content.js"
             ],
             "run_at": "document_idle",
-            "all_frames": true
+            "all_frames": true,
+            "match_about_blank": true
         }
     ]
 }

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Symbiance</title>
+    <style>
+        body { width: 300px; margin: 0; padding: 18px; font: 14px system-ui, sans-serif; color: #202729; background: #fff; }
+        h1 { margin: 0 0 18px; font-size: 18px; font-weight: 650; }
+        label { display: block; margin: 14px 0 6px; font-weight: 600; }
+        input { box-sizing: border-box; width: 100%; min-height: 36px; padding: 7px 9px; border: 1px solid #aab8bc; border-radius: 4px; font: inherit; }
+        input:focus { outline: 2px solid #168078; outline-offset: 1px; }
+        .room-row { display: flex; gap: 8px; }
+        .room-row input { min-width: 0; }
+        button { min-height: 36px; padding: 7px 12px; border: 1px solid #168078; border-radius: 4px; background: #fff; color: #09635c; font: inherit; cursor: pointer; white-space: nowrap; }
+        button[type="submit"] { width: 100%; margin-top: 18px; background: #096b63; color: #fff; }
+        #status { min-height: 20px; margin: 12px 0 0; color: #455458; }
+        #status.error { color: #a42b2b; }
+    </style>
+</head>
+<body>
+    <h1>Symbiance</h1>
+    <form id="settings">
+        <label for="serverUrl">Server address</label>
+        <input id="serverUrl" type="url" required spellcheck="false" autocomplete="off">
+        <label for="roomId">Room code</label>
+        <div class="room-row">
+            <input id="roomId" required minlength="6" maxlength="64" spellcheck="false" autocomplete="off">
+            <button id="newRoom" type="button">New room</button>
+        </div>
+        <button type="submit">Save</button>
+        <p id="status" role="status" aria-live="polite"></p>
+    </form>
+    <script src="popup.js"></script>
+</body>
+</html>
